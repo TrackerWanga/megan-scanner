@@ -1,0 +1,29 @@
+{
+  "name": "Silva Session Generator",
+  "description": "WhatsApp Session Generator — Silva Tech Nexus v3.0",
+  "logo": "https://files.catbox.moe/52699c.jpg",
+  "repository": "https://github.com/SilvaTechB/Gifted-Session-Generator",
+  "keywords": ["Silva-Tech", "whatsapp", "session", "bot", "baileys"],
+  "success_url": "/",
+  "buildpacks": [
+    { "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" }
+  ],
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production",
+      "required": false
+    },
+    "PORT": {
+      "description": "Port for the web app (5000 recommended)",
+      "value": "5000",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}

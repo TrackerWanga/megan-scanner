@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>NEXUS — WhatsApp Session Generator</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03050f;
+  --t1:#f0edff;
+  --t2:#8b8fbf;
+  --t3:#3a3d5c;
+  --glass:rgba(255,255,255,0.015);
+  --glass2:rgba(255,255,255,0.04);
+  --glass3:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.05);
+  --radius:18px;
+  --radius-sm:10px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--t1);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;
+}
+
+/* === AMBIENT BACKGROUND === */
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(ellipse 70% 50% at 50% 40%,black 30%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse 70% 50% at 50% 40%,black 30%,transparent 70%);
+}
+.bg-noise{
+  position:absolute;inset:0;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.bg-orb{
+  position:absolute;border-radius:50%;filter:blur(140px);opacity:.55;
+  animation:orbDrift 20s ease-in-out infinite;
+}
+.orb-1{width:700px;height:700px;background:radial-gradient(circle,rgba(192,38,211,0.18),transparent 70%);top:-250px;right:-200px;animation-delay:0s}
+.orb-2{width:600px;height:600px;background:radial-gradient(circle,rgba(255,107,53,0.12),transparent 70%);bottom:-200px;left:-150px;animation-delay:-7s}
+.orb-3{width:500px;height:500px;background:radial-gradient(circle,rgba(34,211,238,0.1),transparent 70%);top:45%;left:45%;animation-delay:-14s}
+@keyframes orbDrift{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(40px,-30px) scale(1.08)}50%{transform:translate(-20px,50px) scale(.95)}75%{transform:translate(-50px,-20px) scale(1.04)}}
+
+/* === PARTICLES === */
+.particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.particle{
+  position:absolute;width:2px;height:2px;
+  background:white;border-radius:50%;
+  animation:floatUp linear infinite;
+  opacity:0;
+}
+@keyframes floatUp{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:.7}
+  90%{opacity:.3}
+  100%{transform:translateY(-10vh) scale(1);opacity:0}
+}
+
+/* === NAV === */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(20px,5vw,56px);
+  background:rgba(3,5,15,0.8);backdrop-filter:blur(30px) saturate(180%);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  border-bottom:1px solid var(--border);
+  transition:all .3s;
+}
+nav.scrolled{background:rgba(3,5,15,0.95);box-shadow:0 4px 40px rgba(0,0,0,.6)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#c026d3,#ff6b35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;color:#fff;font-weight:900;
+  box-shadow:0 0 20px rgba(192,38,211,.4);
+  animation:iconPulse 3s ease-in-out infinite;
+}
+@keyframes iconPulse{0%,100%{box-shadow:0 0 20px rgba(192,38,211,.4)}50%{box-shadow:0 0 40px rgba(255,107,53,.6)}}
+.brand-name{
+  font-family:'Orbitron',sans-serif;
+  font-size:.95rem;font-weight:800;color:var(--t1);
+  letter-spacing:.04em;
+}
+.brand-ver{
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  padding:2px 8px;border-radius:100px;
+  background:rgba(192,38,211,.12);border:1px solid rgba(192,38,211,.2);
+  color:#c026d3;
+}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:8px;
+  color:var(--t2);text-decoration:none;font-size:.82rem;font-weight:500;
+  transition:all .2s;border:1px solid transparent;
+}
+.nav-link:hover{color:var(--t1);background:var(--glass3);border-color:var(--border)}
+.nav-cta{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:10px;
+  background:linear-gradient(135deg,#c026d3,#a21caf);
+  color:#fff;text-decoration:none;font-weight:700;font-size:.82rem;
+  transition:all .25s;box-shadow:0 0 30px rgba(192,38,211,.3);
+  font-family:'Orbitron',sans-serif;letter-spacing:.04em;
+}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(192,38,211,.5)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px}
+.hamburger span{width:22px;height:2px;background:var(--t1);border-radius:2px;transition:all .3s}
+@media(max-width:768px){.nav-links .nav-link{display:none}.hamburger{display:flex}}
+
+/* === HERO === */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:120px 24px 60px;text-align:center;position:relative;z-index:1;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:7px 20px;border-radius:100px;
+  background:rgba(192,38,211,.07);border:1px solid rgba(192,38,211,.2);
+  font-family:'Orbitron',monospace;font-size:.68rem;font-weight:700;
+  color:#c026d3;letter-spacing:.08em;
+  margin-bottom:32px;
+  animation:fadeInUp .8s ease both;
+  backdrop-filter:blur(10px);
+}
+.badge-pulse{width:7px;height:7px;border-radius:50%;background:#34d399;animation:bpulse 2s infinite;box-shadow:0 0 10px #34d399}
+@keyframes bpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.6)}}
+.hero-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(2.8rem,8vw,6.5rem);
+  font-weight:900;line-height:1.04;letter-spacing:-.04em;
+  margin-bottom:24px;
+  animation:fadeInUp .8s .15s ease both;
+}
+.hero-title .line1{display:block;color:var(--t1)}
+.hero-title .line2{
+  display:block;
+  background:linear-gradient(120deg,#c026d3 0%,#ff6b35 30%,#22d3ee 60%,#c026d3 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:shimmer 4s linear infinite;
+}
+@keyframes shimmer{to{background-position:200% center}}
+.hero-sub{
+  font-size:clamp(.95rem,1.8vw,1.15rem);
+  color:var(--t2);max-width:560px;
+  margin-bottom:44px;line-height:1.8;
+  animation:fadeInUp .8s .3s ease both;
+}
+.hero-btns{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:14px;margin-bottom:70px;
+  animation:fadeInUp .8s .45s ease both;
+}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 32px;border-radius:14px;
+  background:linear-gradient(135deg,#c026d3,#a21caf);
+  color:#fff;font-weight:700;font-size:.92rem;text-decoration:none;
+  font-family:'Orbitron',sans-serif;letter-spacing:.05em;
+  transition:all .3s;box-shadow:0 0 40px rgba(192,38,211,.35);
+  position:relative;overflow:hidden;
+}
+.btn-primary::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,255,255,.15),transparent);
+  transform:translateX(-100%);transition:transform .6s;
+}
+.btn-primary:hover::after{transform:translateX(100%)}
+.btn-primary:hover{transform:translateY(-4px);box-shadow:0 0 70px rgba(192,38,211,.5)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:15px 30px;border-radius:14px;
+  background:var(--glass);border:1px solid rgba(192,38,211,.25);
+  color:#c026d3;font-weight:600;font-size:.92rem;text-decoration:none;
+  font-family:'Orbitron',sans-serif;letter-spacing:.05em;
+  transition:all .3s;
+}
+.btn-ghost:hover{background:rgba(192,38,211,.08);border-color:#c026d3;transform:translateY(-4px);box-shadow:0 0 40px rgba(192,38,211,.2)}
+.hero-stats{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:36px;
+  animation:fadeInUp .8s .6s ease both;
+}
+.stat{text-align:center}
+.stat-val{
+  font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;
+  background:linear-gradient(135deg,#c026d3,#ff6b35);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.stat-lbl{font-size:.68rem;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;font-weight:600;margin-top:2px}
+.stat-div{width:1px;height:32px;background:var(--border)}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+/* === MARQUEE === */
+.marquee{
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:18px 0;overflow:hidden;position:relative;z-index:1;
+  background:rgba(255,255,255,0.004);
+}
+.marquee-track{
+  display:flex;gap:60px;animation:marqueeScroll 30s linear infinite;width:max-content;
+}
+.marquee-item{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Orbitron',monospace;font-size:.72rem;font-weight:600;
+  color:var(--t3);letter-spacing:.05em;white-space:nowrap;
+}
+.marquee-item i{opacity:.5;font-size:.75rem}
+@keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* === SECTIONS === */
+.sec{padding:90px 24px;position:relative;z-index:1}
+.container{max-width:1100px;margin:0 auto}
+.sec-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 16px;border-radius:100px;
+  background:rgba(192,38,211,.06);border:1px solid rgba(192,38,211,.18);
+  color:#c026d3;font-family:'Orbitron',monospace;font-size:.66rem;font-weight:700;
+  letter-spacing:.08em;margin-bottom:16px;
+}
+.sec-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.6rem,3.5vw,2.6rem);
+  font-weight:800;letter-spacing:-.03em;margin-bottom:12px;
+}
+.sec-desc{font-size:.9rem;color:var(--t2);max-width:500px;line-height:1.7;margin-bottom:48px}
+
+/* === METHODS CARDS === */
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.method-grid{grid-template-columns:1fr}}
+.mcard{
+  position:relative;border-radius:22px;padding:36px 30px;
+  background:linear-gradient(160deg,rgba(255,255,255,.02),rgba(255,255,255,.01));
+  border:1px solid var(--border);
+  text-decoration:none;color:inherit;
+  transition:all .4s cubic-bezier(.22,1,.36,1);
+  overflow:hidden;cursor:pointer;display:block;
+}
+.mcard::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity .4s;
+  border-radius:22px;z-index:0;
+}
+.mcard.purple::before{background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(192,38,211,.1),transparent 70%)}
+.mcard.amber::before{background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(255,107,53,.1),transparent 70%)}
+.mcard:hover{transform:translateY(-10px)}
+.mcard.purple:hover{border-color:rgba(192,38,211,.35);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 60px rgba(192,38,211,.12)}
+.mcard.amber:hover{border-color:rgba(255,107,53,.3);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 60px rgba(255,107,53,.1)}
+.mcard:hover::before{opacity:1}
+.mcard>*{position:relative;z-index:1}
+.m-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:3px 12px;border-radius:100px;
+  font-family:'Orbitron',monospace;font-size:.62rem;font-weight:700;letter-spacing:.06em;
+  margin-bottom:20px;
+}
+.m-badge.purple{background:rgba(192,38,211,.1);border:1px solid rgba(192,38,211,.22);color:#c026d3}
+.m-badge.amber{background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.22);color:#ff6b35}
+.m-badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:bpulse 2s infinite}
+.m-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:20px;
+}
+.m-icon.purple{background:rgba(192,38,211,.1);color:#c026d3}
+.m-icon.amber{background:rgba(255,107,53,.1);color:#ff6b35}
+.m-title{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:800;letter-spacing:-.01em;margin-bottom:10px}
+.m-desc{font-size:.84rem;color:var(--t2);line-height:1.7;margin-bottom:22px}
+.m-features{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.m-feat{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--t2)}
+.m-feat-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;flex-shrink:0}
+.m-feat-icon.purple{background:rgba(192,38,211,.12);color:#c026d3}
+.m-feat-icon.amber{background:rgba(255,107,53,.12);color:#ff6b35}
+.m-action{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Orbitron',monospace;font-size:.76rem;font-weight:700;
+  letter-spacing:.05em;transition:gap .3s;
+}
+.mcard:hover .m-action{gap:14px}
+.m-action.purple{color:#c026d3}
+.m-action.amber{color:#ff6b35}
+
+/* === FEATURES GRID === */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:768px){.feat-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.feat-grid{grid-template-columns:1fr}}
+.feat-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:18px;padding:26px 22px;
+  transition:all .3s;
+}
+.feat-card:hover{background:var(--glass2);border-color:rgba(255,255,255,.1);transform:translateY(-4px)}
+.feat-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;margin-bottom:14px;
+}
+.feat-icon.purple{background:rgba(192,38,211,.08);color:#c026d3}
+.feat-icon.amber{background:rgba(255,107,53,.08);color:#ff6b35}
+.feat-icon.cyan{background:rgba(34,211,238,.08);color:#22d3ee}
+.feat-icon.green{background:rgba(52,211,153,.08);color:#34d399}
+.feat-title{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:6px;letter-spacing:.02em}
+.feat-desc{font-size:.78rem;color:var(--t2);line-height:1.6}
+
+/* === PLATFORMS === */
+.plat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:768px){.plat-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.plat-grid{grid-template-columns:1fr}}
+.plat-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:16px;padding:20px 16px;text-align:center;
+  transition:all .3s;
+}
+.plat-card:hover{background:var(--glass2);border-color:rgba(192,38,211,.2);transform:translateY(-5px);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.plat-emoji{font-size:2rem;margin-bottom:10px}
+.plat-name{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:4px}
+.plat-type{font-size:.64rem;color:var(--t3);font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+
+/* === BOT SECTION === */
+.bot-sec{padding:100px 24px;position:relative;z-index:1}
+.bot-sec::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(192,38,211,.04),transparent 70%);
+  pointer-events:none;
+}
+.bot-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:56px;align-items:center}
+@media(max-width:800px){.bot-grid{grid-template-columns:1fr;text-align:center}}
+.bot-visual{position:relative;display:flex;justify-content:center;align-items:center}
+.bot-orb{
+  position:absolute;inset:-40px;border-radius:50%;
+  background:conic-gradient(from 0deg,#c026d3,#ff6b35,#22d3ee,#c026d3);
+  animation:botSpin 8s linear infinite;opacity:.25;filter:blur(50px);
+}
+@keyframes botSpin{to{transform:rotate(360deg)}}
+.bot-img{
+  width:260px;height:260px;border-radius:28px;object-fit:cover;
+  position:relative;z-index:1;
+  border:2px solid rgba(255,255,255,.08);
+  box-shadow:0 40px 100px rgba(0,0,0,.8),0 0 80px rgba(192,38,211,.2);
+}
+@media(max-width:800px){.bot-img{width:180px;height:180px}}
+.bot-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 14px;border-radius:100px;
+  background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);
+  color:#ff6b35;font-family:'Orbitron',monospace;font-size:.65rem;font-weight:700;
+  letter-spacing:.06em;margin-bottom:14px;
+}
+.bot-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.8rem,4vw,2.8rem);
+  font-weight:900;letter-spacing:-.02em;margin-bottom:14px;
+}
+.bot-title span{background:linear-gradient(120deg,#c026d3,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bot-desc{font-size:.9rem;color:var(--t2);line-height:1.8;margin-bottom:24px}
+.bot-stats{display:flex;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+@media(max-width:800px){.bot-stats{justify-content:center}}
+.bot-stat{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;border-radius:10px;
+  background:var(--glass);border:1px solid var(--border);
+  font-size:.8rem;color:var(--t2);font-weight:600;
+}
+.bot-stat i{font-size:.9rem}
+.bot-stat span{font-weight:800;color:var(--t1)}
+.bot-tags{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+@media(max-width:800px){.bot-tags{justify-content:center}}
+.bot-tag-item{
+  padding:6px 16px;border-radius:100px;
+  font-size:.74rem;font-weight:600;
+  background:var(--glass);border:1px solid var(--border);
+  color:var(--t2);transition:all .2s;cursor:default;
+}
+.bot-tag-item:hover{border-color:rgba(192,38,211,.3);color:#c026d3}
+.bot-btns{display:flex;gap:12px;flex-wrap:wrap}
+@media(max-width:800px){.bot-btns{justify-content:center}}
+
+/* === TERMINAL === */
+.terminal{
+  background:#02040d;border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;margin-top:28px;
+}
+.term-bar{
+  display:flex;align-items:center;gap:7px;padding:12px 16px;
+  background:rgba(255,255,255,.015);border-bottom:1px solid var(--border);
+}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-dot.r{background:#ff5f57}.term-dot.y{background:#febc2e}.term-dot.g{background:#28c840}
+.term-file{
+  margin-left:10px;font-family:'JetBrains Mono',monospace;
+  font-size:.66rem;color:var(--t3);
+}
+.term-body{
+  padding:20px 22px;
+  font-family:'JetBrains Mono',monospace;font-size:.76rem;line-height:2.3;
+}
+.term-cmd{color:#34d399}
+.term-out{color:var(--t2);padding-left:16px}
+.term-hl{color:#22d3ee}
+.term-err{color:#ff6b35}
+.term-cursor{display:inline-block;width:8px;height:16px;background:#c026d3;animation:cursorBlink 1s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* === FOOTER === */
+footer{
+  border-top:1px solid var(--border);padding:40px 24px;
+  text-align:center;position:relative;z-index:1;background:rgba(3,5,15,.6);
+  backdrop-filter:blur(20px);
+}
+.ft-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.ft-name{font-family:'Orbitron',sans-serif;font-weight:800;font-size:1rem;letter-spacing:.04em}
+.ft-sub{font-size:.76rem;color:var(--t3);margin-bottom:20px}
+.ft-links{display:flex;justify-content:center;flex-wrap:wrap;gap:20px;margin-bottom:20px}
+.ft-link{font-size:.8rem;color:var(--t2);text-decoration:none;transition:color .2s;display:flex;align-items:center;gap:6px}
+.ft-link:hover{color:#c026d3}
+.ft-copy{font-size:.7rem;color:var(--t3)}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(192,38,211,.3);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:rgba(192,38,211,.5)}
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+</div>
+<div class="particles" id="particles"></div>
+
+<nav id="navbar">
+  <a class="brand" href="/">
+    <div class="brand-icon"><i class="fas fa-bolt"></i></div>
+    <span class="brand-name">NEXUS</span>
+    <span class="brand-ver">V4.0</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="#methods"><i class="fas fa-key"></i> Methods</a>
+    <a class="nav-link" href="#features"><i class="fas fa-cube"></i> Features</a>
+    <a class="nav-link" href="#bot"><i class="fas fa-robot"></i> Bot</a>
+    <a class="nav-link" href="/pair"><i class="fas fa-link"></i> Pair</a>
+    <a class="nav-link" href="/qr"><i class="fas fa-qrcode"></i> QR</a>
+    <a class="nav-cta" href="/pair"><i class="fas fa-wand-magic-sparkles"></i> GET SESSION</a>
+  </div>
+  <div class="hamburger" onclick="alert('Menu coming soon')"><span></span><span></span><span></span></div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-pulse"></span>
+    SESSION GENERATOR · LIVE · V4.0
+  </div>
+  <h1 class="hero-title">
+    <span class="line1">DEPLOY YOUR</span>
+    <span class="line2">WHATSAPP BOT</span>
+  </h1>
+  <p class="hero-sub">
+    Generate secure, compressed session IDs for your WhatsApp bot in seconds.
+    Compatible with Render, Railway, VPS and every major hosting platform.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="/pair"><i class="fas fa-link"></i> PAIRING CODE</a>
+    <a class="btn-ghost" href="/qr"><i class="fas fa-qrcode"></i> QR CODE</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-val">550+</div><div class="stat-lbl">Stars</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-val">2.4k</div><div class="stat-lbl">Forks</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-val">100+</div><div class="stat-lbl">Commands</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-val">FREE</div><div class="stat-lbl">Forever</div></div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <div class="marquee-item"><i class="fas fa-server"></i> RENDER</div>
+    <div class="marquee-item"><i class="fas fa-cloud"></i> VERCEL</div>
+    <div class="marquee-item"><i class="fas fa-train"></i> RAILWAY</div>
+    <div class="marquee-item"><i class="fas fa-plane"></i> FLY.IO</div>
+    <div class="marquee-item"><i class="fab fa-docker"></i> DOCKER</div>
+    <div class="marquee-item"><i class="fas fa-box"></i> KOYEB</div>
+    <div class="marquee-item"><i class="fas fa-bolt"></i> REPLIT</div>
+    <div class="marquee-item"><i class="fas fa-server"></i> RENDER</div>
+    <div class="marquee-item"><i class="fas fa-cloud"></i> VERCEL</div>
+    <div class="marquee-item"><i class="fas fa-train"></i> RAILWAY</div>
+    <div class="marquee-item"><i class="fas fa-plane"></i> FLY.IO</div>
+    <div class="marquee-item"><i class="fab fa-docker"></i> DOCKER</div>
+    <div class="marquee-item"><i class="fas fa-box"></i> KOYEB</div>
+    <div class="marquee-item"><i class="fas fa-bolt"></i> REPLIT</div>
+  </div>
+</div>
+
+<section class="sec" id="methods">
+  <div class="container">
+    <div class="sec-tag"><i class="fas fa-bolt"></i> AUTH METHODS</div>
+    <h2 class="sec-title">Choose Your Path</h2>
+    <p class="sec-desc">Two secure authentication methods. Same result — a compressed session ID delivered to your WhatsApp DM.</p>
+    <div class="method-grid">
+      <a class="mcard purple" href="/pair">
+        <div class="m-badge purple"><span class="m-badge-dot"></span> RECOMMENDED</div>
+        <div class="m-icon purple"><i class="fas fa-link"></i></div>
+        <h3 class="m-title">Pairing Code</h3>
+        <p class="m-desc">Enter your number, get an 8-character code, and link in seconds. No camera needed.</p>
+        <div class="m-features">
+          <div class="m-feat"><div class="m-feat-icon purple"><i class="fas fa-check"></i></div>Enter phone with country code</div>
+          <div class="m-feat"><div class="m-feat-icon purple"><i class="fas fa-check"></i></div>Copy the 8-character pairing code</div>
+          <div class="m-feat"><div class="m-feat-icon purple"><i class="fas fa-check"></i></div>WhatsApp → Linked Devices → Link</div>
+          <div class="m-feat"><div class="m-feat-icon purple"><i class="fas fa-check"></i></div>Session ID auto-delivered to DM</div>
+        </div>
+        <div class="m-action purple">START PAIRING <i class="fas fa-arrow-right"></i></div>
+      </a>
+      <a class="mcard amber" href="/qr">
+        <div class="m-badge amber"><span class="m-badge-dot"></span> ZERO TOUCH</div>
+        <div class="m-icon amber"><i class="fas fa-qrcode"></i></div>
+        <h3 class="m-title">QR Code</h3>
+        <p class="m-desc">Scan the QR with your WhatsApp camera. Session generated and delivered instantly.</p>
+        <div class="m-features">
+          <div class="m-feat"><div class="m-feat-icon amber"><i class="fas fa-check"></i></div>Open the QR Code page</div>
+          <div class="m-feat"><div class="m-feat-icon amber"><i class="fas fa-check"></i></div>WhatsApp → Linked Devices</div>
+          <div class="m-feat"><div class="m-feat-icon amber"><i class="fas fa-check"></i></div>Tap "Link a Device" and scan</div>
+          <div class="m-feat"><div class="m-feat-icon amber"><i class="fas fa-check"></i></div>Session ID auto-delivered to DM</div>
+        </div>
+        <div class="m-action amber">SCAN QR <i class="fas fa-arrow-right"></i></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="features">
+  <div class="container">
+    <div class="sec-tag"><i class="fas fa-cube"></i> CAPABILITIES</div>
+    <h2 class="sec-title">Engineered for Scale</h2>
+    <p class="sec-desc">Security, speed, and compatibility across every deployment platform.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon purple"><i class="fas fa-compress-alt"></i></div>
+        <div class="feat-title">Gzip Compressed</div>
+        <div class="feat-desc">Sessions are gzip + base64 encoded — fit in any env var field.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon cyan"><i class="fas fa-shield-halved"></i></div>
+        <div class="feat-title">End-to-End Secure</div>
+        <div class="feat-desc">Credentials sent directly to your DM. Zero server storage.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon amber"><i class="fas fa-infinity"></i></div>
+        <div class="feat-title">Long-Lived Sessions</div>
+        <div class="feat-desc">One session lasts months. Deploy once and stay online.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon green"><i class="fas fa-mobile-alt"></i></div>
+        <div class="feat-title">Mobile First</div>
+        <div class="feat-desc">Fully responsive. Generate sessions from any device.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon purple"><i class="fas fa-rocket"></i></div>
+        <div class="feat-title">Instant Delivery</div>
+        <div class="feat-desc">Session ID in your WhatsApp chat within seconds of auth.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon cyan"><i class="fab fa-github"></i></div>
+        <div class="feat-title">Open Source</div>
+        <div class="feat-desc">Fork, star, self-host. Free forever under GPL-3.0.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="container">
+    <div class="sec-tag"><i class="fas fa-globe"></i> DEPLOY ANYWHERE</div>
+    <h2 class="sec-title">Universal Platform Support</h2>
+    <p class="sec-desc">One-click deploy or self-host. Every platform, zero config changes.</p>
+    <div class="plat-grid">
+      <div class="plat-card"><div class="plat-emoji">🟢</div><div class="plat-name">Render</div><div class="plat-type">SERVER</div></div>
+      <div class="plat-card"><div class="plat-emoji">▲</div><div class="plat-name">Vercel</div><div class="plat-type">SERVERLESS</div></div>
+      <div class="plat-card"><div class="plat-emoji">🚂</div><div class="plat-name">Railway</div><div class="plat-type">SERVER</div></div>
+      <div class="plat-card"><div class="plat-emoji">✈️</div><div class="plat-name">Fly.io</div><div class="plat-type">SERVER</div></div>
+      <div class="plat-card"><div class="plat-emoji">🐳</div><div class="plat-name">Docker</div><div class="plat-type">VPS / SELF</div></div>
+      <div class="plat-card"><div class="plat-emoji">📦</div><div class="plat-name">Koyeb</div><div class="plat-type">SERVER</div></div>
+      <div class="plat-card"><div class="plat-emoji">💜</div><div class="plat-name">Heroku</div><div class="plat-type">SERVER</div></div>
+      <div class="plat-card"><div class="plat-emoji">⚡</div><div class="plat-name">Replit</div><div class="plat-type">BOTH</div></div>
+    </div>
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div>
+        <span class="term-file">~/nexus $</span>
+      </div>
+      <div class="term-body">
+        <div class="term-cmd">$ git clone https://github.com/TrackerWanga/MEGAN-MD</div>
+        <div class="term-out">Cloning into 'MEGAN-MD'... <span class="term-hl">done</span></div>
+        <div class="term-cmd">$ cd MEGAN-MD && npm install</div>
+        <div class="term-out">added <span class="term-hl">204</span> packages in <span class="term-hl">3.2s</span></div>
+        <div class="term-cmd">$ node index.js</div>
+        <div class="term-out"><span class="term-hl">[ NEXUS ]</span> Deployment Successful!</div>
+        <div class="term-out"><span class="term-hl">[ SERVER ]</span> Running on port 5000</div>
+        <div class="term-cmd">$ <span class="term-cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bot-sec" id="bot">
+  <div class="container">
+    <div class="bot-grid">
+      <div class="bot-visual">
+        <div class="bot-orb"></div>
+        <img class="bot-img" src="https://i.imgur.com/RvEKtPJ.jpeg" alt="MEGAN MD Bot" loading="lazy">
+      </div>
+      <div>
+        <div class="bot-tag"><i class="fas fa-tag"></i> MEGAN-V5.0 — LATEST</div>
+        <h2 class="bot-title">Meet <span>MEGAN MD</span></h2>
+        <p class="bot-desc">
+          A powerful WhatsApp bot with 100+ commands, AI chat, media tools, group management, and stunning themed responses. The session you generate here is your key to deploying it — on any platform.
+        </p>
+        <div class="bot-stats">
+          <div class="bot-stat"><i class="fas fa-star" style="color:#fbbf24"></i> <span>550+</span> Stars</div>
+          <div class="bot-stat"><i class="fas fa-code-fork" style="color:#22d3ee"></i> <span>2.4k</span> Forks</div>
+          <div class="bot-stat"><i class="fas fa-tag" style="color:#c026d3"></i> <span>6</span> Releases</div>
+          <div class="bot-stat"><i class="fas fa-terminal" style="color:#ff6b35"></i> <span>100+</span> Cmds</div>
+        </div>
+        <div class="bot-tags">
+          <span class="bot-tag-item"><i class="fas fa-robot"></i> AI Chat</span>
+          <span class="bot-tag-item"><i class="fas fa-download"></i> Media DL</span>
+          <span class="bot-tag-item"><i class="fas fa-users"></i> Groups</span>
+          <span class="bot-tag-item"><i class="fas fa-chart-bar"></i> Polls</span>
+          <span class="bot-tag-item"><i class="fas fa-palette"></i> Themes</span>
+          <span class="bot-tag-item"><i class="fas fa-music"></i> Music</span>
+          <span class="bot-tag-item"><i class="fas fa-sticky-note"></i> Stickers</span>
+          <span class="bot-tag-item"><i class="fas fa-globe"></i> Web Tools</span>
+        </div>
+        <div class="bot-btns">
+          <a class="btn-primary" href="https://github.com/TrackerWanga/MEGAN-MD/fork" target="_blank"><i class="fas fa-code-fork"></i> FORK & DEPLOY</a>
+          <a class="btn-ghost" href="https://github.com/TrackerWanga/MEGAN-MD" target="_blank"><i class="fab fa-github"></i> GITHUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="ft-brand">
+    <div class="brand-icon" style="width:30px;height:30px;font-size:.75rem"><i class="fas fa-bolt"></i></div>
+    <span class="ft-name">NEXUS</span>
+  </div>
+  <div class="ft-sub">WhatsApp Session Generator · Open Source · Free Forever</div>
+  <div class="ft-links">
+    <a class="ft-link" href="https://github.com/TrackerWanga/MEGAN-MD" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+    <a class="ft-link" href="/pair"><i class="fas fa-link"></i> Pair Code</a>
+    <a class="ft-link" href="/qr"><i class="fas fa-qrcode"></i> QR Code</a>
+    <a class="ft-link" href="https://whatsapp.com/channel/0029VbCqTO3JuyAIVHsZ2w23" target="_blank"><i class="fab fa-whatsapp"></i> Channel</a>
+  </div>
+  <div class="ft-copy">© 2025 MEGAN MD · GPL-3.0 · Built with Baileys</div>
+</footer>
+
+<script>
+// Particles
+(function(){
+  const container=document.getElementById('particles');
+  for(let i=0;i<45;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(Math.random()*12+8)+'s';
+    p.style.animationDelay=(Math.random()*10)+'s';
+    p.style.width=p.style.height=(Math.random()*2.5+1)+'px';
+    p.style.opacity=Math.random()*.5;
+    container.appendChild(p);
+  }
+})();
+
+// Nav scroll effect
+window.addEventListener('scroll',()=>{
+  const nav=document.getElementById('navbar');
+  nav.classList.toggle('scrolled',window.scrollY>50);
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+</script>
+</body>
+</html>
